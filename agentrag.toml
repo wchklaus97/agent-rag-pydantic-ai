@@ -1,0 +1,13 @@
+# Env vars override: RAG_DB, EMBED_PROVIDER, EMBED_MODEL, AGENT_MODEL
+
+db_path = "agentrag.db"
+
+# --- INDEX BUILDER settings (outside the agent). The agent never sees these. ---
+chunk_size = 800
+chunk_overlap = 120
+embed_provider = "local"   # local | hash | openai | gemini
+embed_model = ""
+
+# --- AGENT settings ---
+top_k = 4
+agent_model = "openai:gpt-4o-mini"   # any Pydantic AI model string; see README
