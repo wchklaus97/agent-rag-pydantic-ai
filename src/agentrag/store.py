@@ -45,7 +45,7 @@ class Store:
     def __init__(self, path: str | Path, embedder_name: str, dim: int, force_python: bool = False):
         self.path = str(path)
         self.dim = dim
-        self.db = sqlite3.connect(self.path, check_same_thread=False)  # agent tools run in a worker thread; the agent only reads
+        self.db = sqlite3.connect(self.path, check_same_thread=False)  # tools run in worker threads; StoreSearcher serialises access with a lock
         self.backend = "python-fallback"
         if not force_python:
             self._try_load_vec()

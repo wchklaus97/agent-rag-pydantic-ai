@@ -85,3 +85,14 @@ def test_agent_says_not_found_when_index_is_empty(tmp_path):
 def _parts(tmp_path):
     s = make_searcher(tmp_path)
     return s.store, s.embedder
+
+
+def test_parallel_tool_calls_do_not_corrupt_shared_connection(tmp_path):
+    """Regression: parallel tool calls hit one sqlite connection from several threads at once."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    s = make_searcher(tmp_path)
+    queries = ["annual leave", "taxi fare HKD 300", "supplier onboarding", "personal data"] * 25
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(lambda q: retrieve_snippets(s, q, k=3), queries))
+    assert all(len(r) == 3 and all(x.source.endswith(".md") for x in r) for r in results)

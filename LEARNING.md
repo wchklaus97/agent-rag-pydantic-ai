@@ -37,7 +37,7 @@ Chain 係「**一定**檢索一次，再生成」。Agent 係「模型**自己�
 - System prompt 冇要求引用，或者冇話「搵唔到就唔好估」→ 模型憑記憶作答。
 - Tool 搵唔到時拋 exception 令整個 run 失敗。
 - 用唔支援 tool calling 嘅模型。
-- Sync tool 喺 worker thread 行：SQLite 連線預設不能跨 thread，本 repo 用 `check_same_thread=False`（只讀，所以安全）。
+- Sync tool 喺 worker thread 行，而且模型可以**同時**發出幾個 tool call（parallel tool calls）。兩個 thread 同時用同一條 SQLite 連線會令結果錯亂（亂碼、None、API misuse）。只加 `check_same_thread=False` 唔夠，`StoreSearcher` 要用 lock 串行化存取。呢個 bug 係用真模型測試先發現嘅。
 - 部門過濾係向量搜尋後先做，冷門部門可能少過 k 個結果。
 
 ### 練習
@@ -79,7 +79,7 @@ Cost: more LLM calls, less predictable behaviour, and a model that supports tool
 - A system prompt that doesn't demand citations or say "don't guess when nothing is found" → answers from memory.
 - A tool that raises on empty results and crashes the run.
 - Using a model without tool-calling support.
-- Sync tools run in a worker thread; SQLite connections are thread-bound by default. This repo uses `check_same_thread=False` (safe because the agent only reads).
+- Sync tools run in worker threads, and a model may issue **parallel** tool calls. Two threads using one SQLite connection at once corrupt results (garbled text, `None` rows, API misuse). `check_same_thread=False` alone is not enough; `StoreSearcher` serialises access with a lock. This bug only showed up with a real model.
 - The department filter runs after vector search, so a rare department can return fewer than k results.
 
 ### Exercises

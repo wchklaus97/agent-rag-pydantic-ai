@@ -98,6 +98,30 @@ tests/         tool safety (empty / blank / clamped), citation prompt, agent cal
 LEARNING.md    繁體中文 (zh-HK) + English
 ```
 
+## Run with OpenRouter (or any OpenAI-compatible API)
+
+Keep the key in your shell (e.g. `~/.zshrc`), never in the repo. `.env` files are git-ignored.
+
+```bash
+export OPENROUTER_API_KEY="..."
+export OPENAI_API_KEY="$OPENROUTER_API_KEY"
+export OPENAI_BASE_URL="https://openrouter.ai/api/v1"
+```
+
+```bash
+uv run agentrag agent ask "報銷同年假各有咩規定？" --model openai:openai/gpt-4o-mini
+```
+
+Model names use OpenRouter's `vendor/model` form. Embeddings stay local (`local` or `hash`); this demo does not send document embeddings to OpenRouter.
+
+### Live tests (opt-in, cost a few cents)
+
+```bash
+RUN_LIVE_LLM=1 LIVE_MODEL=openai/gpt-4o-mini uv run pytest tests/test_live_llm.py -v
+```
+
+They are skipped in a normal `uv run pytest`. They check grounded answers, citations, filters, tool choice (`retrieve` vs `list_sources`) and parallel tool calls.
+
 ## Contributing
 
 Good first issues: a `search_by_entity` tool, streaming output, an eval set (question → expected source) scored against the trace, a re-ranking tool. Keep `tools.py` free of agent-framework imports. MIT licensed.
