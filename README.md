@@ -45,6 +45,7 @@ Neither is "better": a chain is right when every question needs the same one loo
 ## Quickstart
 
 ```bash
+git clone https://github.com/wchklaus97/agent-rag-pydantic-ai.git && cd agent-rag-pydantic-ai
 uv sync
 uv run agentrag index build examples/harbour-lane       # offline index, hash embedder fallback (warns)
 uv run agentrag agent ask "年假申請要提前幾多日？" --offline   # scripted model, no API key
@@ -125,6 +126,16 @@ They are skipped in a normal `uv run pytest`. They check grounded answers, citat
 ## Contributing
 
 Good first issues: a `search_by_entity` tool, streaming output, an eval set (question → expected source) scored against the trace, a re-ranking tool. Keep `tools.py` free of agent-framework imports. MIT licensed.
+
+## Series
+
+Three small open-source demos built around one fictional Hong Kong company, each with one theme and one module you can lift out:
+
+| Repo | Theme | Lift-out module |
+|---|---|---|
+| [local-rag-sqlite](https://github.com/wchklaus97/local-rag-sqlite) | Classic RAG pipeline, chunking first | `chunk.py` |
+| [multimodal-page-rag](https://github.com/wchklaus97/multimodal-page-rag) | Page-level units + late fusion | `fusion.py` |
+| [agent-rag-pydantic-ai](https://github.com/wchklaus97/agent-rag-pydantic-ai) | Retrieval as an agent tool | `tools.py` |
 
 ## License
 
