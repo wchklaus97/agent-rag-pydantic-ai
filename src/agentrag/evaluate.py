@@ -34,10 +34,11 @@ REFUSAL_MARKERS = (
     "could not find", "couldn't find", "can't find", "cannot find", "unable to find", "not find",
     "no information", "don't know", "do not know", "not available", "not mentioned", "no relevant",
     "does not mention", "doesn't mention", "no specific", "not specified",
-    "couldn't locate", "could not locate", "not able to find", "been able to find", "not explicitly included",
+    "couldn't locate", "could not locate", "not able to find", "been able to find", "not explicitly",
     "搵唔到", "找不到", "找唔到", "冇資料", "唔知", "不知道", "未能找到", "無法找到",
     "沒有相關", "沒有提及", "沒有提到", "並沒有", "沒有具體", "未有提及", "冇提及", "冇提到", "並無",
     "沒有找到", "没有找到", "未找到", "沒有關於", "没有关于",  # Traditional and Simplified
+    "沒有明確", "没有明确", "未有明確", "冇明確",
 )
 
 @dataclass(frozen=True)
