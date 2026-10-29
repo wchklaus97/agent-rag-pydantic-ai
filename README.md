@@ -1,5 +1,7 @@
 # agent-rag-pydantic-ai
 
+[![tests](https://github.com/wchklaus97/agent-rag-pydantic-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/wchklaus97/agent-rag-pydantic-ai/actions/workflows/tests.yml)
+
 **Theme: agent-first RAG. Retrieval is a typed *tool* the agent decides to call, not a fixed step in a chain.**
 
 A small, runnable demo with [Pydantic AI](https://ai.pydantic.dev/). The index lives outside the agent (SQLite + sqlite-vec). The agent has a `retrieve` tool (and a `list_sources` tool), must cite the sources the tool returns, and prints every tool call so you can watch the loop.
