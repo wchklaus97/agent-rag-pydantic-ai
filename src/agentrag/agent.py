@@ -13,10 +13,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart, ToolReturnPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
+from .lang import is_chinese
 from .tools import Searcher, Snippet, SourceInfo, list_sources as _list_sources, retrieve_snippets
 
 SYSTEM_PROMPT = """\
@@ -24,9 +25,12 @@ You are an assistant for the internal documents of a Hong Kong company group.
 Rules:
 1. For any question about company policy or procedure, call the `retrieve` tool first. Do not answer from memory.
 2. Cite every fact with its source in square brackets taken from the tool result, e.g. [hk-hq/hr/staff-handbook.md].
-3. If `retrieve` returns an empty list or nothing relevant, say you could not find it. Do not guess.
+3. If the passages from `retrieve` do not answer the question, search AGAIN with different wording
+   (for example in the other language, or with the key term from the question) before giving up.
+   Only after at least two searches may you say you could not find it. Never guess.
 4. Use `list_sources` when the user asks what documents or departments exist.
-5. Answer in the language of the question (Cantonese/Traditional Chinese or English).
+5. Always answer in the same language as the user's question, even when the documents are in another
+   language: an English question gets an English answer, a Chinese question a Chinese answer.
 """
 
 
@@ -35,17 +39,39 @@ class Deps:
     searcher: Searcher
 
 
-def build_agent(model=None) -> Agent[Deps, str]:
-    agent = Agent(model, deps_type=Deps, system_prompt=SYSTEM_PROMPT, defer_model_check=True)
+def build_agent(model=None, enforce_language: bool = True) -> Agent[Deps, str]:
+    agent = Agent(model, deps_type=Deps, system_prompt=SYSTEM_PROMPT, defer_model_check=True, retries=2)
+
+    if enforce_language:
+
+        @agent.output_validator
+        def same_language(ctx: RunContext[Deps], output: str) -> str:
+            """Rule 5, enforced in code. A prompt rule is a request; a validator is a check.
+
+            On a mismatch, ModelRetry sends feedback and the model rewrites its answer. On the
+            last allowed retry we accept the answer rather than fail the whole run.
+            """
+            question = ctx.prompt if isinstance(ctx.prompt, str) else ""
+            if question and is_chinese(output) != is_chinese(question) and ctx.retry < ctx.max_retries:
+                language = "Traditional Chinese" if is_chinese(question) else "English"
+                raise ModelRetry(
+                    f"Your answer is in the wrong language. Rewrite the same answer in {language}, "
+                    "the language of the user's question, and keep every [source] citation."
+                )
+            return output
 
     @agent.tool
     def retrieve(ctx: RunContext[Deps], query: str, k: int = 4, department: str | None = None) -> list[Snippet]:
         """Search the company documents and return the best-matching passages with their sources.
 
+        For a question with two topics, call this once per topic with a focused query.
+
         Args:
             query: What to look for, phrased as a short search query.
             k: How many passages to return (1-10).
-            department: Optional department folder to restrict to, e.g. "hr", "finance", "compliance", "operations".
+            department: Optional department folder: "hr", "finance", "compliance" or "operations".
+                Only set it when the user explicitly asks about one department. Leave it empty
+                otherwise - a wrong department silently hides the answer.
         """
         return retrieve_snippets(ctx.deps.searcher, query, k, department)
 

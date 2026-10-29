@@ -96,3 +96,36 @@ def test_parallel_tool_calls_do_not_corrupt_shared_connection(tmp_path):
     with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(pool.map(lambda q: retrieve_snippets(s, q, k=3), queries))
     assert all(len(r) == 3 and all(x.source.endswith(".md") for x in r) for r in results)
+
+
+def _scripted(first: str, after_feedback: str):
+    """A model that answers `first`, then `after_feedback` once it has received retry feedback."""
+    from pydantic_ai.messages import ModelResponse, TextPart, UserPromptPart
+    from pydantic_ai.models.function import FunctionModel
+
+    calls = []
+
+    def script(messages, info):
+        calls.append(1)
+        prompts = [p for m in messages for p in m.parts if isinstance(p, UserPromptPart)]
+        return ModelResponse(parts=[TextPart(after_feedback if len(prompts) > 1 else first)])
+
+    return FunctionModel(script), calls
+
+
+def test_language_validator_makes_the_model_rewrite():
+    model, calls = _scripted("每年有 15 日年假。", "You get 15 days of annual leave.")
+    result = build_agent(model).run_sync("How many days of leave?", deps=Deps(searcher=None))
+    assert result.output == "You get 15 days of annual leave." and len(calls) == 2
+
+
+def test_language_validator_gives_up_gracefully_instead_of_crashing():
+    model, calls = _scripted("每年有 15 日年假。", "仍然係中文。")
+    result = build_agent(model).run_sync("How many days of leave?", deps=Deps(searcher=None))
+    assert result.output == "仍然係中文。" and len(calls) == 3  # 1 answer + 2 retries, then accepted
+
+
+def test_language_validator_can_be_disabled():
+    model, calls = _scripted("每年有 15 日年假。", "unused")
+    result = build_agent(model, enforce_language=False).run_sync("How many days of leave?", deps=Deps(searcher=None))
+    assert result.output == "每年有 15 日年假。" and len(calls) == 1

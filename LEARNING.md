@@ -32,6 +32,15 @@ Chain 係「**一定**檢索一次，再生成」。Agent 係「模型**自己�
 - **docstring 就係 tool 說明書**：模型靠佢同參數 schema 決定幾時、點樣用 tool，所以要寫清楚（見 `agent.py`）。
 - 用 Pydantic model（`Snippet`）做回傳型別，結構清晰。
 
+### 5. 評估 agent（`agentrag eval`）—— 實測學到嘅嘢
+17 條中英問題，逐項評分：揀啱 tool、引用來源、事實正確、用問題嘅語言作答、範圍外要拒答。所有答案存喺 `eval/runs/`，可以用 `--rescore` 重新評分而唔使再叫 LLM。實測過程（見 `eval/RESULTS.md`）：
+1. **第一個結果係錯嘅**：chunk 800 時每份文件得一個 chunk，`retrieve` 預設 k=4 = 成個語料庫，檢索根本冇影響。**語料細嘅 agent 評估量度唔到檢索。**
+2. **先睇答案，再信指標**：睇失敗個案時發現 5 個評分器 bug（中文別名、全形【】引用、檔案路徑、拒答講法）。
+3. **最大嘅真問題係語言漂移**：英文問題 gpt-4o-mini 大多用中文答（0.47）。prompt 加規則只得 0.62–0.65；用 Pydantic AI **output validator + `ModelRetry`** 之後每次都係 1.00。**Prompt 規則係請求，validator 係檢查。**
+4. **可選參數係陷阱**：模型對「報銷」查詢設咗 `department="hr"`，答案被隱藏（46 次有 9 次用 filter）。tool docstring 加兩句之後變 0/94。**喺 agent 入面，tool docstring 就係 prompt。**
+5. **修正有取捨**：之前 `leak-en` 啱，原來係靠估中 `compliance` filter；唔再估之後，答案喺中文段落而 agent 只用英文搜尋，就搵唔到。
+6. **喺 agent 入面 embedding 模型差唔多**：香港文件中英夾雜（"Compliance Officer"、"PDPO"），agent 又寫關鍵字式 query，所以 hash 都搵到。
+
 ### 常見錯誤
 - 以為 Pydantic AI 會幫你切塊、建索引（唔會）。
 - System prompt 冇要求引用，或者冇話「搵唔到就唔好估」→ 模型憑記憶作答。
@@ -73,6 +82,15 @@ Cost: more LLM calls, less predictable behaviour, and a model that supports tool
 - **Every passage carries its source:** no source, no citation.
 - **The docstring is the tool's manual:** the model uses it plus the argument schema to decide when and how to call the tool (see `agent.py`).
 - Return a Pydantic model (`Snippet`) for a clear, typed structure.
+
+### 5. Evaluating the agent (`agentrag eval`): what the runs taught us
+17 zh/en questions scored separately for tool choice, citations, facts, answer language and refusals. Every answer is saved in `eval/runs/`, and `--rescore` re-scores saved answers without calling the LLM. What happened (see `eval/RESULTS.md`):
+1. **The first headline was wrong:** at chunk 800 each document is one chunk and `retrieve`'s default k=4 returns the whole corpus, so retrieval couldn't matter. **An agent eval on a tiny corpus can't measure retrieval.**
+2. **Read answers before trusting metrics:** failures revealed five scorer bugs (Chinese alias, full-width 【】 citations, file paths, refusal phrasings).
+3. **The biggest real failure was language drift:** gpt-4o-mini answered most English questions in Chinese (0.47). A prompt rule reached 0.62–0.65; a Pydantic AI **output validator raising `ModelRetry`** reached 1.00 in every run. **A prompt rule is a request; a validator is a check.**
+4. **Optional parameters are a trap:** the model set `department="hr"` on an *expense* query and hid the answer (9 of 46 searches used a filter). Two sentences in the tool docstring brought it to 0 of 94. **In an agent, the tool docstring is a prompt.**
+5. **Fixes have trade-offs:** an earlier `leak-en` pass came from a lucky `compliance` filter guess; once guessing stopped, the answer (in a Chinese paragraph) is missed because the agent only searches in English.
+6. **Inside the agent the embedder barely mattered:** Hong Kong text is code-mixed ("Compliance Officer", "PDPO") and the agent writes keyword-style queries, so even `hash` matches.
 
 ### Common mistakes
 - Assuming Pydantic AI chunks or indexes for you (it doesn't).

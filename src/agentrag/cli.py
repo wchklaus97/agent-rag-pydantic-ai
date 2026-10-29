@@ -63,6 +63,61 @@ def cmd_ask(args, cfg) -> int:
     return 0
 
 
+def cmd_eval(args, cfg) -> int:
+    import tempfile
+    from pathlib import Path
+
+    from .evaluate import load_qa, run_case, summarize, to_markdown
+
+    import json
+    from dataclasses import replace
+
+    qa = load_qa(args.qa)
+    if args.rescore:
+        from .evaluate import rescore
+
+        table = to_markdown(rescore(args.rescore, qa))
+        print(table)
+        if args.out:
+            Path(args.out).write_text(table, encoding="utf-8")
+        return 0
+    model = offline_model() if args.offline else (args.model or cfg.agent_model)
+    if args.chunk_size:
+        cfg = replace(cfg, chunk_size=args.chunk_size, chunk_overlap=args.chunk_overlap or int(args.chunk_size * 0.15))
+    dump = open(args.dump, "a", encoding="utf-8") if args.dump else None
+    summaries = []
+    for name in args.embed.split(","):
+        embedder = get_embedder(name.strip())
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Store(Path(tmp) / "eval.db", embedder.name, embedder.dim)
+            n_chunks = build_index(args.folder, cfg, embedder, store)
+            deps, agent = Deps(StoreSearcher(store, embedder)), build_agent(model)
+            label = (
+                f"{'offline-scripted' if args.offline else model} + `{embedder.name}`, "
+                f"chunk {cfg.chunk_size}/{cfg.chunk_overlap} ({n_chunks} chunks)"
+            )
+            cases = []
+            for item in qa:
+                case = run_case(agent, deps, item)
+                cases.append(case)
+                if dump:
+                    dump.write(json.dumps({"run": label, "id": item.id, "tools": case.tool_calls, "tool_args": case.tool_args,
+                                           "checks": case.checks, "error": case.error, "output": case.output},
+                                          ensure_ascii=False) + "\n")
+                mark = "PASS" if case.passed else "FAIL " + (case.error or ",".join(k for k, v in case.checks.items() if not v))
+                print(f"  [{name.strip():>5}] {item.id:<18} tools={case.tool_calls}  {mark}")
+            store.close()
+        summaries.append(summarize(label, cases))
+    if dump:
+        dump.close()
+    table = to_markdown(summaries)
+    print("\n" + table)
+    if args.out:
+        Path(args.out).write_text(table, encoding="utf-8")
+        print(f"wrote {args.out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="agentrag", description=__doc__)
     p.add_argument("--config")
@@ -80,6 +135,19 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--model", help="Pydantic AI model string, e.g. openai:gpt-4o-mini")
     s.add_argument("--offline", action="store_true", help="use the scripted model (no API key)")
     s.set_defaults(fn=cmd_ask)
+
+    s = top.add_parser("eval", help="score the agent: tool choice, citations, facts, refusals")
+    s.add_argument("--qa", default="eval/agent_qa.jsonl")
+    s.add_argument("--folder", default="examples/harbour-lane")
+    s.add_argument("--embed", default="hash", help="comma list of embedders to compare, e.g. hash,local")
+    s.add_argument("--model", help="Pydantic AI model string")
+    s.add_argument("--offline", action="store_true", help="scripted model (tests the harness, not an LLM)")
+    s.add_argument("--chunk-size", type=int, help="override chunk_size for the eval index")
+    s.add_argument("--chunk-overlap", type=int, help="override chunk_overlap (default 15%% of size)")
+    s.add_argument("--dump", help="append every case (answer, tool calls, checks) to this JSONL file")
+    s.add_argument("--rescore", metavar="DUMP", help="re-score saved answers with the current scorer (no LLM calls)")
+    s.add_argument("--out")
+    s.set_defaults(fn=cmd_eval)
 
     args = p.parse_args(argv)
     cfg = load_config(args.config)

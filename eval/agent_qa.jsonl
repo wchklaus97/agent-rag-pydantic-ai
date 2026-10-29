@@ -1,0 +1,17 @@
+{"id": "leave-days-en", "lang": "en", "category": "lookup", "q": "How many days of annual leave do full-time staff get?", "expect_tool": "retrieve", "sources": ["hr/staff-handbook.md"], "facts_any": ["15"]}
+{"id": "leave-notice-zh", "lang": "zh", "category": "lookup", "q": "年假要提前幾耐申請？", "expect_tool": "retrieve", "sources": ["hr/staff-handbook.md"], "facts_any": ["5"]}
+{"id": "wfh-en", "lang": "en", "category": "lookup", "q": "How many days a week can I work from home?", "expect_tool": "retrieve", "sources": ["hr/staff-handbook.md"], "facts_any": ["2", "two"]}
+{"id": "taxi-en", "lang": "en", "category": "lookup", "q": "Who must approve a taxi fare over HKD 300?", "expect_tool": "retrieve", "sources": ["finance/expense-claims.md"], "facts_any": ["Finance Manager", "財務經理"]}
+{"id": "director-en", "lang": "en", "category": "lookup", "q": "Which expense receipts need the Finance Director's approval?", "expect_tool": "retrieve", "sources": ["finance/expense-claims.md"], "facts_any": ["5,000", "5000"]}
+{"id": "claim-deadline-zh", "lang": "zh", "category": "lookup", "q": "報銷要喺幾多日內交？", "expect_tool": "retrieve", "sources": ["finance/expense-claims.md"], "facts_any": ["30"]}
+{"id": "leak-en", "lang": "en", "category": "lookup", "q": "How quickly must a suspected customer data leak be reported?", "expect_tool": "retrieve", "sources": ["compliance/personal-data-and-aml.md"], "facts_any": ["24"]}
+{"id": "gift-zh", "lang": "zh", "category": "lookup", "q": "收供應商嘅禮物要唔要登記？", "expect_tool": "retrieve", "sources": ["compliance/personal-data-and-aml.md"], "facts_any": ["500"]}
+{"id": "po-en", "lang": "en", "category": "lookup", "q": "Who co-approves Shenzhen purchase orders above RMB 50,000?", "expect_tool": "retrieve", "sources": ["operations/supplier-onboarding.md"], "facts_any": ["Finance Manager", "財務經理"]}
+{"id": "payrun-zh", "lang": "zh", "category": "lookup", "q": "供應商幾時收到款項？", "expect_tool": "retrieve", "sources": ["operations/supplier-onboarding.md"], "facts_any": ["星期五", "Friday"]}
+{"id": "two-topics-zh", "lang": "zh", "category": "multi", "q": "報銷同年假各有咩規定？", "expect_tool": "retrieve", "sources": ["hr/staff-handbook.md", "finance/expense-claims.md"], "facts_any": ["30"]}
+{"id": "two-topics-en", "lang": "en", "category": "multi", "q": "Compare the approval rules for Shenzhen purchase orders and Hong Kong taxi claims.", "expect_tool": "retrieve", "sources": ["operations/supplier-onboarding.md", "finance/expense-claims.md"], "facts_any": ["Finance Manager", "財務經理"]}
+{"id": "sz-docs-en", "lang": "en", "category": "inventory", "q": "What documents does the Shenzhen subsidiary have?", "expect_tool": "list_sources", "sources": ["supplier-onboarding"], "facts_any": []}
+{"id": "depts-zh", "lang": "zh", "category": "inventory", "q": "公司有邊幾個部門有文件？", "expect_tool": "list_sources", "sources": [], "facts_any": ["hr", "HR", "人事", "人力資源"]}
+{"id": "crypto-en", "lang": "en", "category": "out_of_scope", "q": "What is the company's policy on cryptocurrency trading?", "expect_tool": "retrieve", "sources": [], "facts_any": []}
+{"id": "parking-zh", "lang": "zh", "category": "out_of_scope", "q": "公司有冇員工泊車位津貼？", "expect_tool": "retrieve", "sources": [], "facts_any": []}
+{"id": "bonus-en", "lang": "en", "category": "out_of_scope", "q": "How large is this year's staff bonus?", "expect_tool": "retrieve", "sources": [], "facts_any": []}

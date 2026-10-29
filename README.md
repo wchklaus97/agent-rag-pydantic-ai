@@ -13,7 +13,8 @@ A small, runnable demo with [Pydantic AI](https://ai.pydantic.dev/). The index l
 1. **Where "R" and "G" live in an agent:** R = the `retrieve` tool call, G = the LLM writing from tool results.
 2. **Pydantic AI does not ingest, chunk or embed.** Those happen in the index builder before the agent runs.
 3. **When tools beat chains:** the model can search several times, filter by department, skip retrieval for small talk, or ask what documents exist.
-4. How to design a retrieval tool an LLM can use safely (empty-safe, clamped, cite-ready).
+4. How to design a retrieval tool an LLM can use safely (empty-safe, clamped, cite-ready), and why its docstring is part of the prompt.
+5. How to evaluate an agent (tool choice, citations, facts, language, refusals) and enforce a rule with an output validator.
 
 ## The part you can lift out
 
@@ -80,6 +81,34 @@ For real semantic retrieval install the local embedding model (`uv sync --extra 
 - Other providers (Anthropic, Gemini, …) need their extra: `uv add "pydantic-ai-slim[anthropic]"`, then e.g. `--model anthropic:<model>`.
 - `--offline` (or no `OPENAI_API_KEY`) uses a scripted `FunctionModel` that calls `retrieve` once and quotes the top passage. It shows the loop, not intelligence.
 
+## Evaluation (`agentrag eval`)
+
+Retrieval metrics can't tell you whether an **agent** behaves well. `agentrag eval` runs the full agent loop on 17 zh/en questions and scores five things separately:
+
+- **tool:** right tool chosen
+- **cite:** expected sources cited
+- **fact:** key fact present
+- **lang:** answered in the question's language
+- **refuse:** out-of-scope questions refused
+
+Every answer can be saved (`--dump`) and re-scored later without API calls (`--rescore`).
+
+The eval drove four improvements, measured on one ruler ([eval/RESULTS.md](eval/RESULTS.md)):
+
+| stage | pass (hash / multilingual) | what changed |
+|---|---|---|
+| A | 0.47 / 0.35 | original prompt: English questions answered in Chinese (lang 0.47) |
+| B | 0.59 / 0.56 | retry and language rules **in the prompt**: more searches, lang only 0.62–0.65 |
+| C | 0.94 / 0.92 | **output validator** raising `ModelRetry`: lang 1.00 in every run |
+| D | 1.00 / 0.94 | **tool docstring**: stop guessing `department` (9/46 → 0/94 filtered calls), one search per topic |
+
+Lessons in the results file:
+- An agent eval on a tiny corpus can't measure retrieval.
+- Read the answers before trusting the scorer.
+- A prompt rule is a request; a validator is a check.
+- The tool docstring is a prompt.
+- Fixes have trade-offs.
+
 ## Commands
 
 | Command | What it does |
@@ -87,6 +116,7 @@ For real semantic retrieval install the local embedding model (`uv sync --extra 
 | `agentrag index build <folder>` | Ingest → chunk → embed → store (the index builder; the agent is not involved) |
 | `agentrag index reset` | Delete the index |
 | `agentrag agent ask "<q>" [--model M] [--offline]` | Run the agent; prints tool calls, tool results, final answer |
+| `agentrag eval [--embed hash,local] [--chunk-size N] [--dump F] [--rescore F]` | Score the agent on `eval/agent_qa.jsonl` (needs a model, or `--offline` to test the harness) |
 
 Config in `agentrag.toml` (env: `RAG_DB`, `EMBED_PROVIDER`, `EMBED_MODEL`, `AGENT_MODEL`).
 
