@@ -45,7 +45,7 @@ Ranges are min–max across repeated identical runs. Each question is worth 0.06
 
 ## Still open
 
-- **`leak-en` with the multilingual embedder.** This needs cross-lingual or keyword (hybrid) search inside the tool.
+- **`leak-en` with the multilingual embedder.** This needs cross-lingual or keyword (hybrid) search inside the tool. Follow-up in [hybrid-search-rag](https://github.com/wchklaus97/hybrid-search-rag/blob/main/eval/RESULTS.md): replaying this agent's recorded queries, hybrid search plus reranking finds the answer for 4 of 10 queries (vector search: 0 of 10). That is a partial fix; the rest needs cross-lingual query expansion.
 - **Simplified vs Traditional Chinese.** One answer drifted to Simplified, and the validator only checks Chinese vs English.
 - **The refusal check is phrase-based.** An LLM judge would be more robust.
 - **Scale.** This is one model and 17 questions; grow the set before tuning further.

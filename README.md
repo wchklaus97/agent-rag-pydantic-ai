@@ -18,7 +18,7 @@ A small, runnable demo with [Pydantic AI](https://ai.pydantic.dev/). The index l
 
 ## The part you can lift out
 
-[`src/agentrag/tools.py`](src/agentrag/tools.py): the retrieve tool's contract (`Snippet`, `Searcher` protocol, `retrieve_snippets`, `list_sources`). It needs only `pydantic`; wrap it in any agent framework, back it with any search.
+[`src/agentrag/tools.py`](src/agentrag/tools.py): the retrieve tool's contract (`Snippet`, `Searcher` protocol, `retrieve_snippets`, `list_sources`). It needs only `pydantic`; wrap it in any agent framework, back it with any search. [hybrid-search-rag](https://github.com/wchklaus97/hybrid-search-rag) plugs its BM25 + vector + rerank search into this agent through the same contract.
 
 ```mermaid
 flowchart LR
@@ -161,13 +161,14 @@ Good first issues: a `search_by_entity` tool, streaming output, an eval set (que
 
 ## Series
 
-Three small open-source demos built around one fictional Hong Kong company, each with one theme and one module you can lift out:
+Four small open-source demos built around one fictional Hong Kong company, each with one theme and one module you can lift out:
 
 | Repo | Theme | Lift-out module |
 |---|---|---|
 | [local-rag-sqlite](https://github.com/wchklaus97/local-rag-sqlite) | Classic RAG pipeline, chunking first | `chunk.py` |
 | [multimodal-page-rag](https://github.com/wchklaus97/multimodal-page-rag) | Page-level units + late fusion | `fusion.py` |
 | [agent-rag-pydantic-ai](https://github.com/wchklaus97/agent-rag-pydantic-ai) | Retrieval as an agent tool | `tools.py` |
+| [hybrid-search-rag](https://github.com/wchklaus97/hybrid-search-rag) | Hybrid BM25 + vector + rerank for code-mixed text | `cjk_tokenize.py` |
 
 ## License
 
