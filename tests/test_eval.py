@@ -112,5 +112,7 @@ def test_refusal_markers_cover_phrasings_seen_in_real_runs():
     qa = _qa(category="out_of_scope", sources=[], facts_any=[])
     for answer in ["I couldn't locate specific information regarding this year's bonus.",
                    "目前在檔案中没有找到关于员工泊车位津贴的具体信息。",
-                   "根據檔案，沒有明確提到有關員工泊車位津貼的資訊。"]:
+                   "根據檔案，沒有明確提到有關員工泊車位津貼的資訊。",
+                   # hybrid-search-rag agent check, 2026-10-30
+                   "根據目前所找到的資料，無法確定公司是否提供員工泊車位津貼。所有相關文檔似乎沒有直接提到泊車位津貼的政策或規定。"]:
         assert score(qa, answer, ["retrieve"])["refuse"] is True, answer

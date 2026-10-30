@@ -39,6 +39,7 @@ REFUSAL_MARKERS = (
     "沒有相關", "沒有提及", "沒有提到", "並沒有", "沒有具體", "未有提及", "冇提及", "冇提到", "並無",
     "沒有找到", "没有找到", "未找到", "沒有關於", "没有关于",  # Traditional and Simplified
     "沒有明確", "没有明确", "未有明確", "冇明確",
+    "無法確定", "无法确定", "沒有直接", "没有直接", "cannot determine", "can't determine", "unable to determine",
 )
 
 @dataclass(frozen=True)
