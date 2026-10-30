@@ -170,6 +170,8 @@ Four small open-source demos built around one fictional Hong Kong company, each 
 | [agent-rag-pydantic-ai](https://github.com/wchklaus97/agent-rag-pydantic-ai) | Retrieval as an agent tool | `tools.py` |
 | [hybrid-search-rag](https://github.com/wchklaus97/hybrid-search-rag) | Hybrid BM25 + vector + rerank for code-mixed text | `cjk_tokenize.py` |
 
+Why are `chunk.py`, `embed.py`, `store.py` and `_http.py` copied between repos instead of shared as a package? Deliberately: each repo must clone and run on its own, and a teaching repo should not turn into a dependency chain. The cost is that a fix in one repo does not reach the others.
+
 ## License
 
 MIT
